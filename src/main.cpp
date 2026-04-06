@@ -47,6 +47,8 @@ int main(int argc, char** argv) {
 
   std::cerr << "Scene = " << scene << '\n';
 
+  double pixel_samples_scale = 1.0 / samples;
+
   // World
 
   hittable_list world;
@@ -70,10 +72,12 @@ int main(int argc, char** argv) {
   for (unsigned int j = 0; j < height; j++) {
     std::clog << "\rScanlines remaining: " << (height - j) << ' ' << std::flush;
     for (unsigned int i = 0; i < width; i++) {
-      ray r = cam.get_ray(i, j);
-
-      color pixel_color = ray_color(r, world);
-      write_color(std::cout, pixel_color);
+      color pixel_color(0,0,0);
+      for (unsigned int sample = 0; sample < samples; sample++) {
+        ray r = cam.get_ray(i, j);
+        pixel_color += ray_color(r, world);
+      }
+      write_color(std::cout, pixel_samples_scale * pixel_color);
     }
   }
 
