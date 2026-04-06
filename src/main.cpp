@@ -77,10 +77,10 @@ int main(int argc, char** argv) {
   world.add(make_shared<sphere>(point3( 1.0,    0.0, -1.0),   0.5, material_right));
 
   camera cam(
-    90.0,
-    vec3(0.0, 0.0, 0.0),
-    vec3(0.0, 0.0, -1.0),
-    vec3(0.0, 1.0, 0.0),
+    20.0,
+    point3(-2,2,1),
+    point3(0,0,-1),
+    vec3(0,1,0),
     0.0,
     1.0
   );
