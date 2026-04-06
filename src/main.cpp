@@ -1,7 +1,10 @@
-#include "vendor/CLI11.hpp"
-
 #include <iostream>
 #include <string>
+
+#include "vendor/CLI11.hpp"
+
+#include "vec3.hpp"
+#include "color.hpp"
 
 int main(int argc, char** argv) {
   CLI::App app{"raysetta c++ raytracer"};
@@ -33,18 +36,14 @@ int main(int argc, char** argv) {
   std::cout << "P3\n" << width << ' ' <<height << "\n255\n";
 
   for (unsigned int j = 0; j < height; j++) {
-      for (unsigned int i = 0; i < width; i++) {
-          auto r = double(i) / (width-1);
-          auto g = double(j) / (height-1);
-          auto b = 0.0;
-
-          int ir = int(255.999 * r);
-          int ig = int(255.999 * g);
-          int ib = int(255.999 * b);
-
-          std::cout << ir << ' ' << ig << ' ' << ib << '\n';
-      }
+    std::clog << "\rScanlines remaining: " << (height - j) << ' ' << std::flush;
+    for (unsigned int i = 0; i < width; i++) {
+      auto pixel_color = color(double(i)/(width-1), double(j)/(height-1), 0);
+      write_color(std::cout, pixel_color);
+    }
   }
+
+  std::clog << "\rDone.                 \n";
 
   return 0;
 }
