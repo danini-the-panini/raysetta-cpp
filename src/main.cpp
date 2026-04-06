@@ -8,6 +8,8 @@
 #include "hittable_list.hpp"
 #include "sphere.hpp"
 #include "camera.hpp"
+#include "lambertian.hpp"
+#include "metal.hpp"
 
 color ray_color(const ray& r, int depth, const hittable& world) {
   // If we've exceeded the ray bounce limit, no more light is gathered.
@@ -16,8 +18,11 @@ color ray_color(const ray& r, int depth, const hittable& world) {
 
   hit_record rec;
   if (world.hit(r, interval(0.001, infinity), rec)) {
-    vec3 direction = rec.normal + random_unit_vector();
-    return 0.5 * ray_color(ray(rec.p, direction), depth - 1, world);
+    ray scattered;
+    color attenuation;
+    if (rec.mat->scatter(r, rec, attenuation, scattered))
+      return attenuation * ray_color(scattered, depth-1, world);
+    return color(0,0,0);
   }
 
   vec3 unit_direction = unit_vector(r.direction());
@@ -58,8 +63,15 @@ int main(int argc, char** argv) {
 
   hittable_list world;
 
-  world.add(make_shared<sphere>(point3(0,0,-1), 0.5));
-  world.add(make_shared<sphere>(point3(0,-100.5,-1), 100));
+  auto material_ground = make_shared<lambertian>(color(0.8, 0.8, 0.0));
+  auto material_center = make_shared<lambertian>(color(0.1, 0.2, 0.5));
+  auto material_left   = make_shared<metal>(color(0.8, 0.8, 0.8));
+  auto material_right  = make_shared<metal>(color(0.8, 0.6, 0.2));
+
+  world.add(make_shared<sphere>(point3( 0.0, -100.5, -1.0), 100.0, material_ground));
+  world.add(make_shared<sphere>(point3( 0.0,    0.0, -1.2),   0.5, material_center));
+  world.add(make_shared<sphere>(point3(-1.0,    0.0, -1.0),   0.5, material_left));
+  world.add(make_shared<sphere>(point3( 1.0,    0.0, -1.0),   0.5, material_right));
 
   camera cam(
     90.0,

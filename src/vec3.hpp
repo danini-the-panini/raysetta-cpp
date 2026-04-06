@@ -47,6 +47,12 @@ class vec3 {
       return e[0]*e[0] + e[1]*e[1] + e[2]*e[2];
     }
 
+    bool near_zero() const {
+      // Return true if the vector is close to zero in all dimensions.
+      auto s = 1e-8;
+      return (std::fabs(e[0]) < s) && (std::fabs(e[1]) < s) && (std::fabs(e[2]) < s);
+    }
+
     static vec3 random() {
       return vec3(random_double(), random_double(), random_double());
     }
@@ -58,7 +64,6 @@ class vec3 {
 
 // point3 is just an alias for vec3, but useful for geometric clarity in the code.
 using point3 = vec3;
-
 
 // Vector Utility Functions
 
@@ -104,6 +109,10 @@ inline vec3 cross(const vec3& u, const vec3& v) {
 
 inline vec3 unit_vector(const vec3& v) {
   return v / v.length();
+}
+
+inline vec3 reflect(const vec3& v, const vec3& n) {
+  return v - 2*dot(v,n)*n;
 }
 
 inline vec3 random_unit_vector() {
