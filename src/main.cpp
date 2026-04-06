@@ -81,8 +81,8 @@ int main(int argc, char** argv) {
     point3(-2,2,1),
     point3(0,0,-1),
     vec3(0,1,0),
-    0.0,
-    1.0
+    10.0,
+    3.4
   );
 
   cam.viewport(width, height);
