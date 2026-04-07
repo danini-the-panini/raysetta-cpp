@@ -13,6 +13,7 @@
 #include "metal.hpp"
 #include "dielectric.hpp"
 #include "checker_texture.hpp"
+#include "image_texture.hpp"
 
 color ray_color(const ray& r, int depth, const hittable& world) {
   // If we've exceeded the ray bounce limit, no more light is gathered.
@@ -71,7 +72,8 @@ int main(int argc, char** argv) {
   auto material_center = make_shared<lambertian>(color(0.1, 0.2, 0.5));
   auto material_left   = make_shared<dielectric>(1.50);
   auto material_bubble = make_shared<dielectric>(1.00 / 1.50);
-  auto material_right  = make_shared<metal>(color(0.8, 0.6, 0.2), 0.0);
+  auto earth_texture = make_shared<image_texture>("earthmap.jpg");
+  auto material_right  = make_shared<metal>(earth_texture, 0.0);
 
   world.add(make_shared<sphere>(point3( 0.0, -100.5, -1.0), 100.0, material_ground));
   world.add(make_shared<sphere>(point3( 0.0,    0.0, -1.2), point3( 0.0, 0.5, -1.2),   0.5, material_center));
