@@ -38,8 +38,8 @@ class image_data {
     }
 
     ~image_data() {
-      delete[] bdata;
-      STBI_FREE(fdata);
+      if (bdata != nullptr) delete[] bdata;
+      if (fdata != nullptr) STBI_FREE(fdata);
     }
 
     int width()  const { return (fdata == nullptr) ? 0 : image_width; }

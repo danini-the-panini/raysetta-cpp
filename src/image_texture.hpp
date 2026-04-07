@@ -8,7 +8,7 @@
 
 class image_texture : public texture {
   public:
-    image_texture(const char* filename) : image(make_shared<image_data>(image_data(filename))) {}
+    image_texture(const char* filename) : image(make_shared<image_data>(filename)) {}
 
     color value(double u, double v, const point3&) const override {
       // If we have no texture data, then return solid cyan as a debugging aid.
