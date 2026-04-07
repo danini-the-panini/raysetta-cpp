@@ -6,6 +6,7 @@
 #include "color.hpp"
 #include "hittable.hpp"
 #include "hittable_list.hpp"
+#include "bvh_node.hpp"
 #include "sphere.hpp"
 #include "camera.hpp"
 #include "lambertian.hpp"
@@ -75,6 +76,8 @@ int main(int argc, char** argv) {
   world.add(make_shared<sphere>(point3(-1.0,    0.0, -1.0),   0.5, material_left));
   world.add(make_shared<sphere>(point3(-1.0,    0.0, -1.0),   0.4, material_bubble));
   world.add(make_shared<sphere>(point3( 1.0,    0.0, -1.0),   0.5, material_right));
+
+  world = hittable_list(make_shared<bvh_node>(world));
 
   camera cam(
     20.0,
