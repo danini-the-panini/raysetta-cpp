@@ -53,28 +53,21 @@ int main(int argc, char** argv) {
 
   hittable_list objects;
 
-  auto red   = make_shared<lambertian>(color(.65, .05, .05));
-  auto white = make_shared<lambertian>(color(.73, .73, .73));
-  auto green = make_shared<lambertian>(color(.12, .45, .15));
-  auto light = make_shared<diffuse_light>(color(15, 15, 15));
+  auto white = make_shared<metal>(color(.73, .73, .73), 0.2);
 
-  objects.add(make_shared<quad>(point3(555,0,0), vec3(0,555,0), vec3(0,0,555), green));
-  objects.add(make_shared<quad>(point3(0,0,0), vec3(0,555,0), vec3(0,0,555), red));
-  objects.add(make_shared<quad>(point3(343, 554, 332), vec3(-130,0,0), vec3(0,0,-105), light));
-  objects.add(make_shared<quad>(point3(0,0,0), vec3(555,0,0), vec3(0,0,555), white));
-  objects.add(make_shared<quad>(point3(555,555,555), vec3(-555,0,0), vec3(0,0,-555), white));
-  objects.add(make_shared<quad>(point3(0,0,555), vec3(555,0,0), vec3(0,555,0), white));
+  objects.add(make_shared<sphere>(point3(0,0,0), 0.5, white));
 
   shared_ptr<hittable> world = make_shared<bvh_node>(objects);
 
   // shared_ptr<background> bg = make_shared<gradient>(color(0.5, 0.7, 1.0), color(1.0, 1.0, 1.0));
-  shared_ptr<background> bg = make_shared<solid_color>(0.0, 0.0, 0.0);
+  // shared_ptr<background> bg = make_shared<solid_color>(0.0, 0.0, 0.0);
+  shared_ptr<background> bg = make_shared<image_texture>("earthmap.jpg");
 
   camera_opts cam;
 
-  cam.vfov          = 40;
-  cam.lookfrom      = point3(278, 278, -800);
-  cam.lookat        = point3(278, 278, 0);
+  cam.vfov          = 90;
+  cam.lookfrom      = point3(0.0, 0.0, -1.0);
+  cam.lookat        = point3(0, 0, 0);
   cam.vup           = vec3(0,1,0);
   cam.focus_dist    = 10.0;
   cam.defocus_angle = 0;
