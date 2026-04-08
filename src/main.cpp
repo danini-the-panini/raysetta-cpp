@@ -55,7 +55,8 @@ int main(int argc, char** argv) {
 
   auto white = make_shared<metal>(color(.73, .73, .73), 0.2);
 
-  objects.add(make_shared<sphere>(point3(0,0,0), 0.5, white));
+  // objects.add(make_shared<sphere>(point3(0,0,0), 0.5, white));
+  objects.add(box(point3(-0.25, -0.25, -0.25), point3(0.25, 0.25, 0.25), white));
 
   shared_ptr<hittable> world = make_shared<bvh_node>(objects);
 
@@ -65,8 +66,8 @@ int main(int argc, char** argv) {
 
   camera_opts cam;
 
-  cam.vfov          = 90;
-  cam.lookfrom      = point3(0.0, 0.0, -1.0);
+  cam.vfov          = 60;
+  cam.lookfrom      = point3(0.25, 0.5, 1.0);
   cam.lookat        = point3(0, 0, 0);
   cam.vup           = vec3(0,1,0);
   cam.focus_dist    = 10.0;
