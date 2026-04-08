@@ -3,6 +3,7 @@
 
 #include "material.hpp"
 #include "texture.hpp"
+#include "solid_color.hpp"
 
 class lambertian : public material {
   public:
@@ -18,7 +19,7 @@ class lambertian : public material {
         scatter_direction = rec.normal;
 
       scattered = ray(rec.p, scatter_direction, r_in.time());
-      attenuation = tex->value(rec.u, rec.v, rec.p);
+      attenuation = tex->sample(rec.u, rec.v, rec.p);
       return true;
     }
 

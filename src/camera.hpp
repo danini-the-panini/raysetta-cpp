@@ -5,46 +5,33 @@
 #include "ray.hpp"
 #include "util.hpp"
 
+struct camera_opts {
+  double vfov;
+  point3 lookfrom;
+  point3 lookat;
+  point3 vup;
+
+  double defocus_angle;
+  double focus_dist;
+};
+
 class camera {
   public:
-    double vfov;
-    point3 lookfrom;
-    point3 lookat;
-    point3 vup;
-
-    double defocus_angle;
-    double focus_dist;
-
-    camera(
-      const double vfov,
-      const point3 lookfrom,
-      const point3 lookat,
-      const point3 vup,
-
-      const double defocus_angle,
-      const double focus_dist
-    ) : vfov(vfov),
-        lookfrom(lookfrom),
-        lookat(lookat),
-        vup(vup),
-        defocus_angle(defocus_angle),
-        focus_dist(focus_dist) {};
-
-    void viewport(unsigned int width, unsigned int height) {
+    camera(unsigned int width, unsigned int height, const camera_opts& opts)
+      : defocus_angle(opts.defocus_angle), center(opts.lookfrom)
+    {
       height = (height < 1) ? 1 : height;
       auto aspect_ratio = (double)width / (double)height;
 
-      center = lookfrom;
-
       // Determine viewport dimensions.
-      auto theta = degrees_to_radians(vfov);
+      auto theta = degrees_to_radians(opts.vfov);
       auto h = std::tan(theta/2);
-      auto viewport_height = 2 * h * focus_dist;
+      auto viewport_height = 2 * h * opts.focus_dist;
       auto viewport_width = viewport_height * aspect_ratio;
 
       // Calculate the u,v,w unit basis vectors for the camera coordinate frame.
-      w = unit_vector(lookfrom - lookat);
-      u = unit_vector(cross(vup, w));
+      w = unit_vector(opts.lookfrom - opts.lookat);
+      u = unit_vector(cross(opts.vup, w));
       v = cross(w, u);
 
       // Calculate the vectors across the horizontal and down the vertical viewport edges.
@@ -56,28 +43,30 @@ class camera {
       pixel_delta_v = viewport_v / height;
 
       // Calculate the location of the upper left pixel.
-      auto viewport_upper_left = center - (focus_dist * w) - viewport_u/2 - viewport_v/2;
+      auto viewport_upper_left = center - (opts.focus_dist * w) - viewport_u/2 - viewport_v/2;
       pixel00_loc = viewport_upper_left + 0.5 * (pixel_delta_u + pixel_delta_v);
 
       // Calculate the camera defocus disk basis vectors.
-      auto defocus_radius = focus_dist * std::tan(degrees_to_radians(defocus_angle / 2));
+      auto defocus_radius = opts.focus_dist * std::tan(degrees_to_radians(opts.defocus_angle / 2));
       defocus_disk_u = u * defocus_radius;
       defocus_disk_v = v * defocus_radius;
     }
 
-    ray get_ray(int i, int j) const {
+    ray get_ray(unsigned int x, unsigned int y) const {
       // Construct a camera ray originating from the origin and directed at randomly sampled
-      // point around the pixel location i, j.
+      // point around the pixel location x, y.
 
       auto offset = sample_square();
       auto pixel_sample = pixel00_loc
-        + ((i + offset.x()) * pixel_delta_u)
-        + ((j + offset.y()) * pixel_delta_v);
+        + ((double(x) + offset.x()) * pixel_delta_u)
+        + ((double(y) + offset.y()) * pixel_delta_v);
 
       auto ray_origin = (defocus_angle <= 0) ? center : defocus_disk_sample();
       auto ray_direction = pixel_sample - ray_origin;
 
-      return ray(ray_origin, ray_direction, random_double());
+      ray r(ray_origin, ray_direction, random_double());
+
+      return r;
     }
 
     vec3 sample_square() const {
@@ -92,6 +81,8 @@ class camera {
     }
 
   private:
+    double defocus_angle;
+
     int    height;         // Rendered image height
     point3 center;         // Camera center
     point3 pixel00_loc;    // Location of pixel 0, 0

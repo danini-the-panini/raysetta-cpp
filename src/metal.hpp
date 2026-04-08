@@ -14,7 +14,7 @@ class metal : public material {
       vec3 reflected = reflect(r_in.direction(), rec.normal);
       reflected = unit_vector(reflected) + (fuzz * random_unit_vector());
       scattered = ray(rec.p, reflected, r_in.time());
-      attenuation = tex->value(rec.u, rec.v, rec.p);
+      attenuation = tex->sample(rec.u, rec.v, rec.p);
       return (dot(scattered.direction(), rec.normal) > 0);
     }
 

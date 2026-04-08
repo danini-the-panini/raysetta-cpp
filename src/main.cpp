@@ -16,25 +16,11 @@
 #include "image_texture.hpp"
 #include "noise_texture.hpp"
 #include "quad.hpp"
-
-color ray_color(const ray& r, int depth, const hittable& world) {
-  // If we've exceeded the ray bounce limit, no more light is gathered.
-  if (depth <= 0)
-    return color(0,0,0);
-
-  hit_record rec;
-  if (world.hit(r, interval(0.001, infinity), rec)) {
-    ray scattered;
-    color attenuation;
-    if (rec.mat->scatter(r, rec, attenuation, scattered))
-      return attenuation * ray_color(scattered, depth-1, world);
-    return color(0,0,0);
-  }
-
-  vec3 unit_direction = unit_vector(r.direction());
-  auto a = 0.5*(unit_direction.y() + 1.0);
-  return (1.0-a)*color(1.0, 1.0, 1.0) + a*color(0.5, 0.7, 1.0);
-}
+#include "diffuse_light.hpp"
+#include "solid_color.hpp"
+#include "gradient.hpp"
+#include "scene.hpp"
+#include "tracer.hpp"
 
 int main(int argc, char** argv) {
   CLI::App app{"raysetta c++ raytracer"};
@@ -55,59 +41,60 @@ int main(int argc, char** argv) {
   unsigned int depth{10};
   app.add_option("-d,--depth", depth, "Max depth (default 10)")->check(CLI::Number);
 
-  std::string scene;
-  app.add_option("scene", scene, "Scene file")->required();
+  std::string scene_path;
+  app.add_option("scene", scene_path, "Scene file")->required();
   app.validate_positionals();
 
   CLI11_PARSE(app, argc, argv);
 
-  std::cerr << "Scene = " << scene << '\n';
-
-  double pixel_samples_scale = 1.0 / samples;
+  std::cerr << "Scene = " << scene_path << '\n';
 
   // World
 
-  hittable_list world;
+  hittable_list objects;
 
-  // auto checker = make_shared<checker_texture>(0.32, color(.2, .3, .1), color(.9, .9, .9));
-  auto pertext = make_shared<noise_texture>(4, 7, 2);
-  auto material_ground = make_shared<metal>(pertext, 0.5);
-  auto material_center = make_shared<lambertian>(color(0.1, 0.2, 0.5));
-  auto material_left   = make_shared<dielectric>(1.50);
-  auto material_bubble = make_shared<dielectric>(1.00 / 1.50);
-  auto earth_texture = make_shared<image_texture>("earthmap.jpg");
-  auto material_right  = make_shared<metal>(earth_texture, 0.0);
+  auto red   = make_shared<lambertian>(color(.65, .05, .05));
+  auto white = make_shared<lambertian>(color(.73, .73, .73));
+  auto green = make_shared<lambertian>(color(.12, .45, .15));
+  auto light = make_shared<diffuse_light>(color(15, 15, 15));
 
-  world.add(make_shared<sphere>(point3( 0.0, -100.5, -1.0), 100.0, material_ground));
-  world.add(make_shared<sphere>(point3( 0.0,    0.0, -1.2), point3( 0.0, 0.5, -1.2),   0.5, material_center));
-  world.add(make_shared<sphere>(point3(-1.0,    0.0, -1.0),   0.5, material_left));
-  world.add(make_shared<sphere>(point3(-1.0,    0.0, -1.0),   0.4, material_bubble));
-  world.add(make_shared<sphere>(point3( 1.0,    0.0, -1.0),   0.5, material_right));
+  objects.add(make_shared<quad>(point3(555,0,0), vec3(0,555,0), vec3(0,0,555), green));
+  objects.add(make_shared<quad>(point3(0,0,0), vec3(0,555,0), vec3(0,0,555), red));
+  objects.add(make_shared<quad>(point3(343, 554, 332), vec3(-130,0,0), vec3(0,0,-105), light));
+  objects.add(make_shared<quad>(point3(0,0,0), vec3(555,0,0), vec3(0,0,555), white));
+  objects.add(make_shared<quad>(point3(555,555,555), vec3(-555,0,0), vec3(0,0,-555), white));
+  objects.add(make_shared<quad>(point3(0,0,555), vec3(555,0,0), vec3(0,555,0), white));
 
-  world = hittable_list(make_shared<bvh_node>(world));
+  shared_ptr<hittable> world = make_shared<bvh_node>(objects);
 
-  camera cam(
-    60.0,
-    point3(-2,2,1),
-    point3(0,0,-1),
-    vec3(0,1,0),
-    10.0,
-    3.4
+  // shared_ptr<background> bg = make_shared<gradient>(color(0.5, 0.7, 1.0), color(1.0, 1.0, 1.0));
+  shared_ptr<background> bg = make_shared<solid_color>(0.0, 0.0, 0.0);
+
+  camera_opts cam;
+
+  cam.vfov          = 40;
+  cam.lookfrom      = point3(278, 278, -800);
+  cam.lookat        = point3(278, 278, 0);
+  cam.vup           = vec3(0,1,0);
+  cam.focus_dist    = 10.0;
+  cam.defocus_angle = 0;
+
+  scene scn(world, bg, cam);
+
+  tracer tr = tracer(
+    width,
+    height,
+    samples,
+    depth,
+    scn
   );
-
-  cam.viewport(width, height);
 
   std::cout << "P3\n" << width << ' ' <<height << "\n255\n";
 
-  for (unsigned int j = 0; j < height; j++) {
-    std::clog << "\rScanlines remaining: " << (height - j) << ' ' << std::flush;
-    for (unsigned int i = 0; i < width; i++) {
-      color pixel_color(0,0,0);
-      for (unsigned int sample = 0; sample < samples; sample++) {
-        ray r = cam.get_ray(i, j);
-        pixel_color += ray_color(r, depth, world);
-      }
-      write_color(std::cout, pixel_samples_scale * pixel_color);
+  for (unsigned int y = 0; y < height; y++) {
+    std::clog << "\rScanlines remaining: " << (height - y) << ' ' << std::flush;
+    for (unsigned int x = 0; x < width; x++) {
+      write_pixel(std::cout, tr.trace(x, y));
     }
   }
 

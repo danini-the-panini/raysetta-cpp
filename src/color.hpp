@@ -7,6 +7,17 @@
 
 using color = vec3;
 
-void write_color(std::ostream& out, const color& pixel_color);
+union pixel {
+  unsigned char value[3];
+  struct {
+    unsigned char r;
+    unsigned char g;
+    unsigned char b;
+  };
+};
+
+pixel to_pixel(const color& c);
+
+void write_pixel(std::ostream& out, const pixel& px);
 
 #endif

@@ -2,6 +2,7 @@
 #define CHECKER_TEXTURE_H
 
 #include "texture.hpp"
+#include "solid_color.hpp"
 
 class checker_texture : public texture {
   public:
@@ -11,14 +12,14 @@ class checker_texture : public texture {
     checker_texture(double scale, const color& c1, const color& c2)
       : checker_texture(scale, make_shared<solid_color>(c1), make_shared<solid_color>(c2)) {}
 
-    color value(double u, double v, const point3& p) const override {
+    color sample(double u, double v, const point3& p) const override {
       auto xInteger = int(std::floor(inv_scale * p.x()));
       auto yInteger = int(std::floor(inv_scale * p.y()));
       auto zInteger = int(std::floor(inv_scale * p.z()));
 
       bool isEven = (xInteger + yInteger + zInteger) % 2 == 0;
 
-      return isEven ? even->value(u, v, p) : odd->value(u, v, p);
+      return isEven ? even->sample(u, v, p) : odd->sample(u, v, p);
     }
 
   private:

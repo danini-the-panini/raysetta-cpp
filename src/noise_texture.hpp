@@ -13,7 +13,7 @@ class noise_texture : public texture {
     noise_texture(double scale, int depth, int marble_axis, shared_ptr<perlin> noise)
       : scale(scale), depth(depth), marble_axis(marble_axis), noise(noise) {}
 
-    color value(double, double, const point3& p) const override {
+    color sample(double, double, const point3& p) const override {
       if (marble_axis >= 0) {
         return color(0.5, 0.5, 0.5) * (1.0 + std::sin(scale * p[marble_axis] + 10 * noise->turb(p, depth)));
       } else {
