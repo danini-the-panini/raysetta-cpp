@@ -15,6 +15,7 @@
 #include "checker_texture.hpp"
 #include "image_texture.hpp"
 #include "noise_texture.hpp"
+#include "quad.hpp"
 
 color ray_color(const ray& r, int depth, const hittable& world) {
   // If we've exceeded the ray bounce limit, no more light is gathered.
