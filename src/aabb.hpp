@@ -75,6 +75,20 @@ class aabb {
         return y.size() > z.size() ? 1 : 2;
     }
 
+    aabb& operator+=(const aabb& b) {
+      x = interval(x, b.x);
+      y = interval(y, b.y);
+      z = interval(z, b.z);
+      return *this;
+    }
+
+    aabb& operator+=(const point3& p) {
+      x = (p.x() < x.min) ? interval(p.x(), x.max) : ((p[0] > x.max) ? interval(x.min, p.x()) : x);
+      y = (p.y() < y.min) ? interval(p.y(), y.max) : ((p[0] > y.max) ? interval(y.min, p.y()) : y);
+      z = (p.z() < z.min) ? interval(p.z(), z.max) : ((p[0] > z.max) ? interval(z.min, p.z()) : z);
+      return *this;
+    }
+
     static const aabb empty, universe;
 
   private:
@@ -88,5 +102,21 @@ class aabb {
       if (z.size() < delta) z = z.expand(delta);
     }
 };
+
+inline aabb operator+(const aabb& a, const aabb& b) {
+  return aabb(a, b);
+}
+
+inline aabb operator+(const aabb& b, const point3& p) {
+  return aabb(
+    (p.x() < b.x.min) ? interval(p.x(), b.x.max) : ((p[0] > b.x.max) ? interval(b.x.min, p.x()) : b.x),
+    (p.y() < b.y.min) ? interval(p.y(), b.y.max) : ((p[0] > b.y.max) ? interval(b.y.min, p.y()) : b.y),
+    (p.z() < b.z.min) ? interval(p.z(), b.z.max) : ((p[0] > b.z.max) ? interval(b.z.min, p.z()) : b.z)
+  );
+}
+
+inline aabb operator+(const point3& p, const aabb& b) {
+  return b + p;
+}
 
 #endif

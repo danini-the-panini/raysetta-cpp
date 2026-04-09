@@ -1,4 +1,5 @@
 #include "cube_map.hpp"
+#include "tri.hpp"
 #include "vendor/CLI11.hpp"
 
 #include "util.hpp"
@@ -54,10 +55,12 @@ int main(int argc, char** argv) {
 
   hittable_list objects;
 
-  auto white = make_shared<metal>(color(1, 1, 1), 0.1);
+  auto white = make_shared<metal>(color(1, 0.75, 1), 0.2);
 
-  objects.add(make_shared<sphere>(point3(0,0,0), 0.5, white));
+  // objects.add(make_shared<sphere>(point3(0,0,0), 0.5, white));
   // objects.add(box(point3(-0.25, -0.25, -0.25), point3(0.25, 0.25, 0.25), white));
+
+  objects.add(make_shared<tri>(point3(0.0, 0.0, 0.0), point3(0.0, 0.5, 0.0), point3(0.5, 0.0, 0.0), white));
 
   shared_ptr<hittable> world = make_shared<bvh_node>(objects);
 
@@ -76,7 +79,7 @@ int main(int argc, char** argv) {
   camera_opts cam;
 
   cam.vfov          = 120;
-  cam.lookfrom      = point3(-0.25, 0.5, -1.0);
+  cam.lookfrom      = point3(0.25, 0.5, 1.0);
   cam.lookat        = point3(0, 0, 0);
   cam.vup           = vec3(0,1,0);
   cam.focus_dist    = 10.0;
