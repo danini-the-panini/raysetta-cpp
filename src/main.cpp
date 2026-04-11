@@ -1,27 +1,7 @@
-#include "cube_map.hpp"
-#include "tri.hpp"
 #include "vendor/CLI11.hpp"
 
-#include "util.hpp"
-#include "vec3.hpp"
-#include "ray.hpp"
 #include "color.hpp"
-#include "hittable.hpp"
-#include "hittable_list.hpp"
-#include "bvh_node.hpp"
-#include "sphere.hpp"
-#include "camera.hpp"
-#include "lambertian.hpp"
-#include "metal.hpp"
-#include "dielectric.hpp"
-#include "checker_texture.hpp"
-#include "image_texture.hpp"
-#include "noise_texture.hpp"
-#include "quad.hpp"
-#include "diffuse_light.hpp"
-#include "solid_color.hpp"
-#include "gradient.hpp"
-#include "scene.hpp"
+#include "parser.hpp"
 #include "tracer.hpp"
 
 int main(int argc, char** argv) {
@@ -49,51 +29,8 @@ int main(int argc, char** argv) {
 
   CLI11_PARSE(app, argc, argv);
 
-  std::cerr << "Scene = " << scene_path << '\n';
-
-  // World
-
-  hittable_list objects;
-
-  auto white = make_shared<metal>(color(1, 0.75, 1), 0.2);
-
-  // objects.add(make_shared<sphere>(point3(0,0,0), 0.5, white));
-  // objects.add(box(point3(-0.25, -0.25, -0.25), point3(0.25, 0.25, 0.25), white));
-
-  objects.add(make_shared<tri>(point3(0.0, 0.0, 0.0), point3(0.0, 0.5, 0.0), point3(0.5, 0.0, 0.0), white));
-
-  shared_ptr<hittable> world = make_shared<bvh_node>(objects);
-
-  // shared_ptr<background> bg = make_shared<gradient>(color(0.5, 0.7, 1.0), color(1.0, 1.0, 1.0));
-  // shared_ptr<background> bg = make_shared<solid_color>(0.0, 0.0, 0.0);
-  // shared_ptr<background> bg = make_shared<image_texture>("earthmap.jpg");
-  shared_ptr<background> bg = make_shared<cube_map>(
-    "../textures/cubemap/right.png",
-    "../textures/cubemap/left.png",
-    "../textures/cubemap/top.png",
-    "../textures/cubemap/bottom.png",
-    "../textures/cubemap/front.png",
-    "../textures/cubemap/back.png"
-  );
-
-  camera_opts cam;
-
-  cam.vfov          = 120;
-  cam.lookfrom      = point3(0.25, 0.5, 1.0);
-  cam.lookat        = point3(0, 0, 0);
-  cam.vup           = vec3(0,1,0);
-  cam.focus_dist    = 10.0;
-  cam.defocus_angle = 0;
-
-  scene scn(world, bg, cam);
-
-  tracer tr = tracer(
-    width,
-    height,
-    samples,
-    depth,
-    scn
-  );
+  scene scn = parser(scene_path).parse();
+  tracer tr = tracer(width, height, samples, depth, scn);
 
   std::cout << "P3\n" << width << ' ' <<height << "\n255\n";
 

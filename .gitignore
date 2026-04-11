@@ -1,3 +1,5 @@
+.cache/
 bin/
 build/
 *.ppm
+compile_commands.json

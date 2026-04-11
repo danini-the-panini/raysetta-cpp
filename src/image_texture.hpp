@@ -1,15 +1,15 @@
 #ifndef IMAGE_TEXTURE_H
 #define IMAGE_TEXTURE_H
 
-#include "background.hpp"
 #include "interval.hpp"
 #include "image_data.hpp"
 #include "texture.hpp"
 #include "vec3.hpp"
 #include <memory>
 
-class image_texture : public texture, public background {
+class image_texture : public texture {
   public:
+    image_texture(shared_ptr<image_data> img) : image(img) {}
     image_texture(const char* filename) : image(make_shared<image_data>(filename)) {}
 
     color sample(double u, double v, const point3&) const override {
@@ -26,13 +26,6 @@ class image_texture : public texture, public background {
 
       auto color_scale = 1.0 / 255.0;
       return color(color_scale*pixel[0], color_scale*pixel[1], color_scale*pixel[2]);
-    }
-
-    color sample_sphere(const ray& r) const override {
-      auto unit_direction = unit_vector(r.direction());
-      double u, v;
-      get_sphere_uv(unit_direction, u, v);
-      return sample(u, v, unit_direction);
     }
 
   private:

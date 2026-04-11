@@ -2,6 +2,7 @@
 #define SAMPLER_H
 
 // Disable strict warnings for this header from the Microsoft Visual C++ compiler.
+#include <cstring>
 #ifdef _MSC_VER
   #pragma warning (push, 0)
 #endif
@@ -10,13 +11,22 @@
 #define STBI_FAILURE_USERMSG
 #include "vendor/stb_image.hpp"
 
+#include "vendor/base64.hpp"
+
 #include <iostream>
 
 class image_data {
   public:
     image_data() {}
 
-    image_data(const char* image_filename) {
+    image_data(std::string fname_or_url) : image_data(fname_or_url.c_str()) {}
+
+    image_data(const char* fname_or_url) {
+      if (strncmp(fname_or_url, "data:", 5) == 0) {
+        load_data_url(fname_or_url);
+      } else {
+        load_file(fname_or_url);
+      }
       // Loads image data from the specified file. If the image was not loaded successfully,
       // width() and height() will return 0.
 
@@ -26,12 +36,6 @@ class image_data {
       // contiguous, going left to right for the width of the image, followed by the next row
       // below, for the full height of the image.
 
-      auto n = bytes_per_pixel; // Dummy out parameter: original components per pixel
-      fdata = stbi_loadf(image_filename, &image_width, &image_height, &n, bytes_per_pixel);
-      if (fdata == nullptr) {
-        std::cerr << "ERROR: Could not load image file '" << image_filename << "'.\n";
-        return;
-      }
 
       bytes_per_scanline = image_width * bytes_per_pixel;
       convert_to_bytes();
@@ -64,6 +68,31 @@ class image_data {
     int            image_width = 0;         // Loaded image width
     int            image_height = 0;        // Loaded image height
     int            bytes_per_scanline = 0;
+
+    void load_file(const char* image_filename) {
+      auto n = bytes_per_pixel; // Dummy out parameter: original components per pixel
+      fdata = stbi_loadf(image_filename, &image_width, &image_height, &n, bytes_per_pixel);
+      if (fdata == nullptr) {
+        std::cerr << "ERROR: Could not load image file '" << image_filename << "'.\n";
+        return;
+      }
+    }
+
+    void load_data_url(const char* data_url) {
+      auto data = strchr(data_url, ',');
+      if (data != nullptr) {
+        data++;
+      }
+      auto decoded = base64::from_base64(data);
+      auto n = bytes_per_pixel; // Dummy out parameter: original components per pixel
+      fdata = stbi_loadf_from_memory((const stbi_uc*)decoded.c_str(), decoded.length(), &image_width, &image_height, &n, bytes_per_pixel);
+      if (fdata == nullptr) {
+        char snip[21] = {0};
+        strncpy(snip, data_url, 20);
+        std::cerr << "ERROR: Could not load base64 image '" << snip << "'.\n";
+        return;
+      }
+    }
 
     static int clamp(int x, int low, int high) {
       // Return the value clamped to the range [low, high).

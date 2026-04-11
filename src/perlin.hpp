@@ -4,9 +4,12 @@
 #include "util.hpp"
 #include "vec3.hpp"
 #include <cstring>
+#include <vector>
 
 class perlin {
   public:
+    static const int point_count = 256;
+
     perlin() {
       for (int i = 0; i < point_count; i++) {
         randvec[i] = unit_vector(vec3::random(-1,1));
@@ -27,6 +30,18 @@ class perlin {
       memcpy(this->perm_x, perm_x, point_count*sizeof(int));
       memcpy(this->perm_y, perm_y, point_count*sizeof(int));
       memcpy(this->perm_z, perm_z, point_count*sizeof(int));
+    }
+
+    perlin(
+      const std::vector<vec3> randvec,
+      const std::vector<int> perm_x,
+      const std::vector<int> perm_y,
+      const std::vector<int> perm_z
+    ) {
+      std::copy(randvec.cbegin(), randvec.cend(), this->randvec);
+      std::copy(perm_x.cbegin(), perm_x.cend(), this->perm_x);
+      std::copy(perm_y.cbegin(), perm_y.cend(), this->perm_y);
+      std::copy(perm_z.cbegin(), perm_z.cend(), this->perm_z);
     }
 
     double noise(const point3& p) const {
@@ -69,7 +84,6 @@ class perlin {
     }
 
   private:
-    static const int point_count = 256;
     vec3 randvec[point_count];
     int perm_x[point_count];
     int perm_y[point_count];
